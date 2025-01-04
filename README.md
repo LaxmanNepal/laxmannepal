@@ -31,3 +31,16 @@ Skills: JS / HTML / CSS
 ![GitHub streak stats](https://github-readme-streak-stats.herokuapp.com/?user=laxmannepal)  
 
 ![Profile views](https://gpvc.arturio.dev/laxmannepal)  
+
+
+
+<div align="left">
+</div>
+
+###
+
+<br clear="both">
+
+<img src="https://raw.githubusercontent.com/laxmannepal/laxmannepal/output/snake.svg" alt="Snake animation" />
+
+###
