@@ -114,6 +114,16 @@
     .repo-buttons a:hover {
       background: #005f99;
     }
+    .calendar {
+      max-width: 980px;
+      margin: 3rem auto;
+      text-align: center;
+    }
+    .calendar iframe {
+      border: none;
+      width: 100%;
+      min-height: 200px;
+    }
   </style>
 </head>
 <body>
@@ -126,6 +136,11 @@
     <input class="search-box" type="text" id="repoSearch" oninput="filterRepos()" placeholder="Search Repositories...">
     <div id="repoListPage" class="repo-grid">Loading repositories...</div>
   </header>
+
+  <div class="calendar">
+    <h2>GitHub Contributions</h2>
+    <iframe src="https://ghchart.rshah.org/007acc/laxmannepal" title="GitHub contributions chart"></iframe>
+  </div>
 
   <script>
     tsParticles.load("tsparticles", {
@@ -155,6 +170,33 @@
         document.getElementById("github-avatar").src = data.avatar_url;
         document.getElementById("github-bio").textContent = data.bio || "No bio provided.";
         document.getElementById("github-followers").textContent = `${data.followers} followers`;
+      });
+
+    let allRepos = [];
+    function filterRepos() {
+      const search = document.getElementById("repoSearch").value.toLowerCase();
+      const container = document.getElementById("repoListPage");
+      container.innerHTML = '';
+      allRepos
+        .filter(repo => repo.name.toLowerCase().includes(search))
+        .forEach(repo => {
+          const card = `<div class="repo">
+            <h3>${repo.name}</h3>
+            <p>${repo.description || 'No description provided.'}</p>
+            <div class="repo-buttons">
+              <a href="${repo.html_url}" target="_blank">Code</a>
+              ${repo.homepage ? `<a href="${repo.homepage}" target="_blank">Go to</a>` : ''}
+            </div>
+          </div>`;
+          container.innerHTML += card;
+        });
+    }
+
+    fetch("https://api.github.com/users/laxmannepal/repos?sort=updated")
+      .then(response => response.json())
+      .then(repos => {
+        allRepos = repos.filter(repo => !repo.fork);
+        filterRepos();
       });
   </script>
 </body>
