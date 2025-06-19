@@ -22,4 +22,140 @@
       background: transparent;
       text-align: center;
       padding: 2rem 1rem 1rem;
-      pos
+      position: relative;
+    }
+    header img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #007acc;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .bio {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: #444;
+    }
+    .followers {
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .typewriter {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #007acc;
+      border-right: 2px solid #007acc;
+      white-space: nowrap;
+      overflow: hidden;
+      margin: 1rem auto;
+      animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+      width: 0;
+    }
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+    @keyframes blink-caret {
+      from, to { border-color: transparent }
+      50% { border-color: #007acc; }
+    }
+    .search-box {
+      max-width: 400px;
+      width: 90%;
+      margin: 1rem auto;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 1rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .repo {
+      background: white;
+      border-radius: 12px;
+      padding: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease;
+    }
+    .repo:hover {
+      transform: translateY(-5px);
+    }
+    .repo h3 {
+      color: #007acc;
+      margin-bottom: 0.5rem;
+    }
+    .repo p {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: #555;
+    }
+    .repo-buttons {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .repo-buttons a {
+      background: #007acc;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: background 0.3s;
+    }
+    .repo-buttons a:hover {
+      background: #005f99;
+    }
+  </style>
+</head>
+<body>
+  <div id="tsparticles"></div>
+  <header>
+    <img id="github-avatar" src="" alt="Profile">
+    <div class="bio" id="github-bio">Loading bio...</div>
+    <div class="followers" id="github-followers"></div>
+    <div class="typewriter" id="typewriter"></div>
+    <input class="search-box" type="text" id="repoSearch" oninput="filterRepos()" placeholder="Search Repositories...">
+    <div id="repoListPage" class="repo-grid">Loading repositories...</div>
+  </header>
+
+  <script>
+    tsParticles.load("tsparticles", {
+      background: { color: { value: "#ffffff" } },
+      particles: {
+        number: { value: 50 },
+        color: { value: "#007acc" },
+        shape: { type: "circle" },
+        opacity: { value: 0.4 },
+        size: { value: 4 },
+        move: { enable: true, speed: 1 }
+      },
+      interactivity: {
+        events: {
+          onhover: { enable: true, mode: "repulse" }
+        },
+        modes: {
+          repulse: { distance: 100 }
+        }
+      },
+      detectRetina: true
+    });
+
+    fetch("https://api.github.com/users/laxmannepal")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("github-avatar").src = data.avatar_url;
+        document.getElementById("github-bio").textContent = data.bio || "No bio provided.";
+        document.getElementById("github-followers").textContent = `${data.followers} followers`;
+      });
+  </script>
+</body>
+</html>
