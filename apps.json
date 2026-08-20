@@ -1,0 +1,8 @@
+[
+  {"name":"Nisulka Tools","category":"Tools","description":"A growing collection of free online tools built by Laxman Nepal.","url":"https://apps.laxmannepal.com.np/Nisulka-Tools/","icon":"fa-solid fa-toolbox","featured":true},
+  {"name":"Games","category":"Games","description":"A collection of browser games built for quick, simple play.","url":"https://apps.laxmannepal.com.np/games/","icon":"fa-solid fa-gamepad","featured":true},
+  {"name":"Gold Price in Nepal","category":"Finance","description":"A Nepal-focused gold price web app.","url":"https://apps.laxmannepal.com.np/Gold-Price-In-Nepal/","icon":"fa-solid fa-coins","featured":true},
+  {"name":"Nepali Patro","category":"Nepal","description":"A Nepali calendar and date utility experience.","url":"https://apps.laxmannepal.com.np/Nepali-Patro/","icon":"fa-solid fa-calendar-days","featured":true},
+  {"name":"Text To Handwriting","category":"Tools","description":"Convert typed text into handwriting-style output.","url":"https://apps.laxmannepal.com.np/Text-To-Handwriting/","icon":"fa-solid fa-pen-nib","featured":true},
+  {"name":"Nepal News Hub","category":"News","description":"A Nepal-focused news application project.","url":"https://apps.laxmannepal.com.np/Nepal-News-Hub-Pro/","icon":"fa-solid fa-newspaper","featured":true}
+]
