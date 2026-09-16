@@ -21,56 +21,87 @@ jobs:
         run: |
           python - <<'PY'
           import json, os, subprocess
-          from datetime import datetime, timezone
+          from datetime import datetime, timezone, timedelta
 
           owner = 'LaxmanNepal'
           token = os.environ['GH_TOKEN']
+          now = datetime.now(timezone.utc)
+          start = now - timedelta(days=364)
 
           def gh(path):
               p = subprocess.run(['gh','api',path,'--paginate'], env={**os.environ,'GH_TOKEN':token}, capture_output=True, text=True, check=True)
               text = p.stdout.strip()
               if not text: return []
-              # --paginate concatenates JSON pages; decode each JSON value when possible.
               dec = json.JSONDecoder(); out=[]; i=0
               while i < len(text):
                   while i < len(text) and text[i].isspace(): i += 1
                   if i >= len(text): break
                   value, end = dec.raw_decode(text, i); i=end
-                  if isinstance(value, list): out.extend(value)
+                  if isinstance(value,list): out.extend(value)
                   else: out.append(value)
               return out
 
-          profile = subprocess.run(['gh','api',f'/users/{owner}'],env={**os.environ,'GH_TOKEN':token},capture_output=True,text=True,check=True).stdout
-          profile=json.loads(profile)
+          profile=json.loads(subprocess.run(['gh','api',f'/users/{owner}'],env={**os.environ,'GH_TOKEN':token},capture_output=True,text=True,check=True).stdout)
           repos=gh(f'/users/{owner}/repos?per_page=100&sort=updated')
-
           clean=[]
           for r in repos:
               clean.append({k:r.get(k) for k in ['id','name','full_name','html_url','description','fork','archived','stargazers_count','forks_count','watchers_count','size','language','topics','created_at','updated_at','pushed_at','default_branch']})
 
-          commits=[]
-          try:
-              commits=gh(f'/repos/{owner}/laxmannepal/commits?per_page=100')
-          except Exception:
-              pass
-          recent=[]
-          for c in commits[:30]:
-              author=(c.get('commit') or {}).get('author') or {}
-              recent.append({'sha':c.get('sha','')[:12],'html_url':c.get('html_url'),'message':((c.get('commit') or {}).get('message') or '').split('\n')[0][:160],'date':author.get('date'),'repo':'laxmannepal'})
-
-          # Repository commit activity is queried individually for the most recently pushed projects.
+          # Aggregate public commits for the last 365 days. Actions uses its token, so the public site never needs a token.
+          daily={}
+          for i in range(365):
+              day=(start+timedelta(days=i)).date().isoformat()
+              daily[day]=0
           repo_activity=[]
-          for r in sorted(clean,key=lambda x:x.get('pushed_at') or '',reverse=True)[:40]:
+          for r in sorted(clean,key=lambda x:x.get('pushed_at') or '',reverse=True):
+              if r.get('fork') or r.get('archived'):
+                  continue
               try:
-                  rows=gh(f"/repos/{owner}/{r['name']}/stats/commit_activity")
-                  if rows:
-                      total=sum(x.get('total',0) for x in rows)
-                      repo_activity.append({'name':r['name'],'html_url':r['html_url'],'weekly':rows[-12:],'commits_52w':total})
+                  rows=gh(f"/repos/{owner}/{r['name']}/commits?since={start.isoformat()}&until={now.isoformat()}&per_page=100")
+                  count=0
+                  for c in rows:
+                      d=((c.get('commit') or {}).get('author') or {}).get('date')
+                      if d:
+                          day=d[:10]
+                          if day in daily:
+                              daily[day]+=1; count+=1
+                  if count:
+                      repo_activity.append({'name':r['name'],'html_url':r['html_url'],'commits_365d':count})
               except Exception:
                   continue
 
+          contribution_days=[{'date':d,'count':daily[d]} for d in sorted(daily)]
+          total=sum(x['count'] for x in contribution_days)
+          active=sum(1 for x in contribution_days if x['count']>0)
+          current=0
+          for x in reversed(contribution_days):
+              if x['count']>0: current+=1
+              else: break
+          longest=run=0
+          for x in contribution_days:
+              if x['count']>0:
+                  run+=1; longest=max(longest,run)
+              else: run=0
+
+          monthly={}
+          for x in contribution_days:
+              key=x['date'][:7]; monthly[key]=monthly.get(key,0)+x['count']
+          monthly_activity=[{'month':k,'count':v} for k,v in sorted(monthly.items())][-12:]
+
+          recent=[]
+          for r in sorted(clean,key=lambda x:x.get('pushed_at') or '',reverse=True)[:20]:
+              try:
+                  rows=gh(f"/repos/{owner}/{r['name']}/commits?per_page=5")
+                  for c in rows:
+                      a=(c.get('commit') or {}).get('author') or {}
+                      recent.append({'sha':c.get('sha','')[:12],'html_url':c.get('html_url'),'message':((c.get('commit') or {}).get('message') or '').split('\\n')[0][:160],'date':a.get('date'),'repo':r['name']})
+              except Exception:
+                  continue
+          recent.sort(key=lambda x:x.get('date') or '',reverse=True)
+
           langs={}
-          for r in clean[:80]:
+          for r in clean:
+              if r.get('fork') or r.get('archived'): continue
               try:
                   data=gh(f"/repos/{owner}/{r['name']}/languages")
                   if data and isinstance(data[0],dict):
@@ -78,8 +109,19 @@ jobs:
               except Exception:
                   pass
 
-          now=datetime.now(timezone.utc).isoformat()
-          payload={'generated_at':now,'profile':{'login':profile.get('login'),'name':profile.get('name'),'avatar_url':profile.get('avatar_url'),'followers':profile.get('followers'),'following':profile.get('following'),'public_repos':profile.get('public_repos')},'repositories':clean,'languages':langs,'recent_commits':recent,'repository_activity':repo_activity}
+          now_iso=now.isoformat()
+          payload={
+            'generated_at':now_iso,
+            'period':{'from':start.date().isoformat(),'to':now.date().isoformat(),'scope':'public commits in original, non-archived repositories'},
+            'profile':{'login':profile.get('login'),'name':profile.get('name'),'avatar_url':profile.get('avatar_url'),'followers':profile.get('followers'),'following':profile.get('following'),'public_repos':profile.get('public_repos')},
+            'repositories':clean,
+            'languages':langs,
+            'recent_commits':recent[:30],
+            'repository_activity':repo_activity[:40],
+            'contribution_days':contribution_days,
+            'contribution_summary':{'total':total,'active_days':active,'current_streak':current,'longest_streak':longest},
+            'monthly_activity':monthly_activity
+          }
           os.makedirs('data',exist_ok=True)
           with open('data/github-stats.json','w',encoding='utf-8') as f: json.dump(payload,f,separators=(',',':'),ensure_ascii=False)
           PY
