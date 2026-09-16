@@ -1,46 +1,95 @@
-### Hi there 👋, my name is Laxman Nepal
-#### I am a computer teacher.
-![I am a computer teacher.](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHTA6_uSzSNTHTm9Y4avy6_nGWfIGsdPPqjrbHd0r2_lDjEQa-UMNP7L7i_klqgtR0ZjejXH2EgBiT07jUip11EJcPLKaBpTD6pJ73kjK1okezgVYG8AvAru591ri9fqobvkcm5VEgRyfF/s3085/PicsArt_05-12-07.18.08.jpg)
+# 👋 Laxman Nepal
 
-I made this project just for fun, it allows you to create nice and simple GitHub Readme files that you can copy/paste and use in your profile.
+### Builder • Creator • Computer Educator • Digital Product Maker 🇳🇵
 
-Skills: JS / HTML / CSS
+I build practical web applications, creator tools, educational resources and experiments focused on making everyday digital work simpler.
 
-- 🔭 I’m currently working on Laxman Nepal 
-- 🌱 I’m currently learning Coding... 
-- 💬 Ask me about code. 
-- 📫 How to reach me: reply any repo 
-- 😄 Pronouns: Laxman Nepal 
-- ⚡ Fun fact: My Name is Laxman Nepal and i am from Nepal. 
+> **Practical AI. Tested. Explained.**
 
+## 🚀 What is this repository?
 
-[<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg' alt='github' height='40'>](https://github.com/laxmannepal)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/dev-dot-to.svg' alt='dev' height='40'>](https://dev.to/laxmannepal)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg' alt='linkedin' height='40'>](https://www.linkedin.com/in/laxmannepal/)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/facebook.svg' alt='facebook' height='40'>](https://www.facebook.com/laxmannepalhtd)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/instagram.svg' alt='instagram' height='40'>](https://www.instagram.com/laxmannnepal/)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/twitter.svg' alt='twitter' height='40'>](https://twitter.com/lnn1053)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/codepen.svg' alt='codepen' height='40'>](https://codepen.io/lnn1053)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/youtube.svg' alt='YouTube' height='40'>](https://www.youtube.com/channel/laxmannepalofficial)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/reddit.svg' alt='Reddit' height='40'>](https://www.reddit.com/user/laxmannepal)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/icloud.svg' alt='website' height='40'>](https://www.laxmannepal.com.np)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/google.svg' alt='google' height='40'>](https://www.google.com/search?q=laxman+nepal)  
+`LaxmanNepal/laxmannepal` is my public profile-and-showcase repository. It powers a small personal hub where visitors can discover my applications, YouTube work, public projects and the technologies behind them.
 
-<a href='https://archiveprogram.github.com/'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/acbadge.gif' width='40' height='40'></a> <a href='https://docs.github.com/en/developers'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/devbadge.gif' width='40' height='40'></a> <a href='https://github.com/pricing'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/pro.gif' width='40' height='40'></a> <a href='https://stars.github.com/'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/starbadge.gif' width='35' height='35'></a> <a href='https://docs.github.com/en/github/supporting-the-open-source-community-with-github-sponsors'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/sponsorbadge.gif' width='35' height='35'></a> 
+The repository separates content/data from the presentation layer:
 
-[![trophy](https://github-profile-trophy.vercel.app/?username=laxmannepal)](https://github.com/ryo-ma/github-profile-trophy)
+- `index.html` — interactive public showcase
+- `apps.json` — structured catalogue of deployed applications
+- `youtube.json` — YouTube channel and video snapshot data
+- `README.md` — developer-facing profile and project documentation
+- `LICENSE` — project license
 
-[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=laxmannepal)](https://github.com/anuraghazra/github-readme-stats)
+## 🧰 What I build
 
-![GitHub stats](https://github-readme-stats.vercel.app/api?username=laxmannepal&show_icons=true&count_private=true)  
+| Area | Examples |
+| --- | --- |
+| 🌐 Web Apps | Free tools, utilities, dashboards and Nepal-focused web experiences |
+| 🤖 AI | AI experiments, practical workflows and creator-focused tools |
+| 📚 Education | Computer, MS Office, Excel, typing and digital-skills resources |
+| 🎬 Creator Tools | YouTube, content workflows, analytics and publishing utilities |
+| 🇳🇵 Nepal-focused Products | Nepali calendar, news, finance and other local utilities |
+| 🧪 Experiments | Small prototypes used to test ideas and technologies |
 
-![GitHub Activity Graph](https://activity-graph.herokuapp.com/graph?username=laxmannepal)  
+## ⭐ Featured applications
 
-![GitHub metrics](https://metrics.lecoq.io/laxmannepal)  
+- **Nisulka Tools** — a growing collection of free online tools
+- **Games** — lightweight browser games
+- **Gold Price in Nepal** — Nepal-focused gold price experience
+- **Nepali Patro** — Nepali calendar and date utilities
+- **Text To Handwriting** — typed text to handwriting-style output
+- **Nepal News Hub** — Nepal-focused news application project
 
-![GitHub streak stats](https://github-readme-streak-stats.herokuapp.com/?user=laxmannepal)  
+## 🎥 YouTube
 
-![Profile views](https://gpvc.arturio.dev/laxmannepal)  
+I publish practical technology and knowledge content on **Laxman Nepal**.
 
+Topics include Nepali computer tutorials, MS Office and Excel, Nepali typing, Kalimati and Preeti, Photoshop, AI tools, useful websites and apps.
 
+Channel: https://www.youtube.com/@laxmannepalofficial
 
-<div align="left">
-</div>
+## 💻 Tech direction
 
-###
+This project is intentionally lightweight. The showcase uses standard web technologies and JSON-driven content so it stays easy to maintain and deploy.
 
-<br clear="both">
+**Core:** HTML • CSS • JavaScript • JSON
 
-<img src="https://raw.githubusercontent.com/laxmannepal/laxmannepal/output/snake.svg" alt="Snake animation" />
+**Design:** responsive layouts • modern UI patterns • accessible components • mobile-first presentation
 
-###
+## 📊 Repository insights
+
+The website can read public GitHub repository metadata and present useful information such as stars, forks, issues, repository size, last update, language information and the current file structure. This keeps the showcase connected to the actual repository instead of relying only on hard-coded numbers.
+
+## 🔗 Find me online
+
+- GitHub: https://github.com/LaxmanNepal
+- Website: https://www.laxmannepal.com.np
+- YouTube: https://www.youtube.com/@laxmannepalofficial
+- Instagram: https://www.instagram.com/laxmannnepal/
+- Facebook: https://www.facebook.com/laxmannepalhtd
+- LinkedIn: https://www.linkedin.com/in/laxmannepal/
+- Dev.to: https://dev.to/laxmannepal
+
+## 🛠️ Local development
+
+No build system is required.
+
+1. Clone the repository.
+2. Open `index.html` in a browser or serve the directory with any static web server.
+3. Edit `apps.json` to add or update applications.
+4. Edit `youtube.json` to update the YouTube snapshot.
+
+## 📌 Philosophy
+
+I prefer useful software over complicated software.
+
+A project does not need a huge stack to be valuable. If a small, fast and understandable web app solves a real problem, it is worth building.
+
+## 📄 License
+
+See [`LICENSE`](LICENSE) for the license terms.
+
+---
+
+<p align="center">
+  <strong>Built and maintained by Laxman Nepal 🇳🇵</strong><br>
+  <sub>Building useful things, one project at a time.</sub>
+</p>
