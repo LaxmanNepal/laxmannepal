@@ -1,0 +1,93 @@
+name: GitHub Analytics Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 0 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  build-analytics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate analytics snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          from datetime import datetime, timezone
+
+          owner = 'LaxmanNepal'
+          token = os.environ['GH_TOKEN']
+
+          def gh(path):
+              p = subprocess.run(['gh','api',path,'--paginate'], env={**os.environ,'GH_TOKEN':token}, capture_output=True, text=True, check=True)
+              text = p.stdout.strip()
+              if not text: return []
+              # --paginate concatenates JSON pages; decode each JSON value when possible.
+              dec = json.JSONDecoder(); out=[]; i=0
+              while i < len(text):
+                  while i < len(text) and text[i].isspace(): i += 1
+                  if i >= len(text): break
+                  value, end = dec.raw_decode(text, i); i=end
+                  if isinstance(value, list): out.extend(value)
+                  else: out.append(value)
+              return out
+
+          profile = subprocess.run(['gh','api',f'/users/{owner}'],env={**os.environ,'GH_TOKEN':token},capture_output=True,text=True,check=True).stdout
+          profile=json.loads(profile)
+          repos=gh(f'/users/{owner}/repos?per_page=100&sort=updated')
+
+          clean=[]
+          for r in repos:
+              clean.append({k:r.get(k) for k in ['id','name','full_name','html_url','description','fork','archived','stargazers_count','forks_count','watchers_count','size','language','topics','created_at','updated_at','pushed_at','default_branch']})
+
+          commits=[]
+          try:
+              commits=gh(f'/repos/{owner}/laxmannepal/commits?per_page=100')
+          except Exception:
+              pass
+          recent=[]
+          for c in commits[:30]:
+              author=(c.get('commit') or {}).get('author') or {}
+              recent.append({'sha':c.get('sha','')[:12],'html_url':c.get('html_url'),'message':((c.get('commit') or {}).get('message') or '').split('\n')[0][:160],'date':author.get('date'),'repo':'laxmannepal'})
+
+          # Repository commit activity is queried individually for the most recently pushed projects.
+          repo_activity=[]
+          for r in sorted(clean,key=lambda x:x.get('pushed_at') or '',reverse=True)[:40]:
+              try:
+                  rows=gh(f"/repos/{owner}/{r['name']}/stats/commit_activity")
+                  if rows:
+                      total=sum(x.get('total',0) for x in rows)
+                      repo_activity.append({'name':r['name'],'html_url':r['html_url'],'weekly':rows[-12:],'commits_52w':total})
+              except Exception:
+                  continue
+
+          langs={}
+          for r in clean[:80]:
+              try:
+                  data=gh(f"/repos/{owner}/{r['name']}/languages")
+                  if data and isinstance(data[0],dict):
+                      for k,v in data[0].items(): langs[k]=langs.get(k,0)+v
+              except Exception:
+                  pass
+
+          now=datetime.now(timezone.utc).isoformat()
+          payload={'generated_at':now,'profile':{'login':profile.get('login'),'name':profile.get('name'),'avatar_url':profile.get('avatar_url'),'followers':profile.get('followers'),'following':profile.get('following'),'public_repos':profile.get('public_repos')},'repositories':clean,'languages':langs,'recent_commits':recent,'repository_activity':repo_activity}
+          os.makedirs('data',exist_ok=True)
+          with open('data/github-stats.json','w',encoding='utf-8') as f: json.dump(payload,f,separators=(',',':'),ensure_ascii=False)
+          PY
+
+      - name: Commit snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/github-stats.json
+          git diff --cached --quiet || git commit -m 'chore: refresh GitHub analytics snapshot [skip ci]'
+          git push
