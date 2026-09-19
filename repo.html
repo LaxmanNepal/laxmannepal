@@ -47,7 +47,7 @@ main{padding:34px 0 70px}.hero{padding:28px;border:1px solid var(--line);border-
 </section>
 
 <section class="panel" style="margin-top:14px" id="intelligence">
-<div class="sectionHead"><h2>Repository intelligence</h2><span class="lastRefresh" id="lastRefresh">Refreshing live GitHub data…</span></div>
+<div class="sectionHead"><h2>Repository intelligence</h2><span class="lastRefresh" id="lastRefresh">Refreshing live GitHub data…</span></div><div class="status" style="text-align:left;padding:0 0 12px">Live metrics are read from GitHub when this page loads. Empty or temporarily unavailable statistics are shown as such rather than estimated.</div>
 <div class="intelGrid">
 <div class="intelCard"><b id="openPrs">—</b><span>Open pull requests</span></div>
 <div class="intelCard"><b id="openIssues">—</b><span>Open issues</span></div>
@@ -74,7 +74,7 @@ main{padding:34px 0 70px}.hero{padding:28px;border:1px solid var(--line);border-
 <div id="contributorList" class="intelList"><div class="status">Loading…</div></div>
 </div>
 </div>
-<div style="margin-top:12px" class="quick">
+<div style="margin-top:12px"><h2>GitHub Actions</h2><div id="workflowList" class="intelList"><div class="status">Loading workflows…</div></div></div><div style="margin-top:12px" class="quick">
 <a id="issuesLink" class="btn" target="_blank" rel="noopener">Issues ↗</a>
 <a id="prsLink" class="btn" target="_blank" rel="noopener">Pull requests ↗</a>
 <a id="zipLink" class="btn" target="_blank" rel="noopener">Download ZIP ↗</a>
@@ -105,7 +105,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const n=v=>new Intl.NumberFormat().format(v||0);
 const ago=d=>{if(!d)return'—';const x=Math.max(0,(Date.now()-new Date(d))/86400000);return x<1?Math.max(1,Math.floor(x*24))+'h ago':x<30?Math.floor(x)+'d ago':x<365?Math.floor(x/30)+'mo ago':Math.floor(x/365)+'y ago'};
 const urlFrom=v=>{const m=String(v||'').match(/https?:\/\/[^\s<>"')]+/i);return m?m[0].replace(/[.,;]+$/,''):null};
-async function api(path){const r=await fetch(API+path,{headers:{Accept:'application/vnd.github+json'}});if(!r.ok)throw Error('GitHub '+r.status);return r.json()}
+async function api(path){const r=await fetch(API+path,{headers:{Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2026-03-10'}});if(!r.ok)throw Error('GitHub '+r.status);return r.json()}
 function fallbackSnapshot(r){const title=esc(r.name||repo),lang=esc(r.language||'Open Source'),desc=esc((r.description||'Laxman Nepal project').slice(0,100));return'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675"><rect width="1200" height="675" fill="#f7f9ff"/><rect x="35" y="35" width="1130" height="605" rx="32" fill="#fff" stroke="#e3e8f4"/><circle cx="85" cy="85" r="10" fill="#4f6df5"/><text x="115" y="92" font-family="Arial" font-size="22" font-weight="700" fill="#172033">LAXMAN NEPAL · PROJECT SNAPSHOT</text><text x="80" y="230" font-family="Arial" font-size="64" font-weight="800" fill="#172033">'+title+'</text><text x="80" y="285" font-family="Arial" font-size="24" fill="#4f6df5">'+lang+'</text><text x="80" y="350" font-family="Arial" font-size="22" fill="#68738a">'+desc+'</text><text x="80" y="575" font-family="Arial" font-size="18" fill="#68738a">github.com/LaxmanNepal/'+title+'</text></svg>')}
 
 async function loadTree(ref){try{const items=await api('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/contents?ref='+encodeURIComponent(ref));const list=Array.isArray(items)?items:[];$('tree').innerHTML=list.length?list.map(x=>'<a class="treeItem" href="'+esc(x.html_url||x.download_url||(repoData?.html_url||'#'))+'" target="_blank" rel="noopener"><span class="treeIcon">'+(x.type==='dir'?'📁':'📄')+'</span><span class="treeName">'+esc(x.name)+'</span><span class="treeMeta">'+esc(x.type==='dir'?'folder':(x.size?((x.size/1024).toFixed(1)+' KB'):'file'))+'</span></a>').join(''):'<div class="status">Repository is empty.</div>'}catch(e){$('tree').innerHTML='<div class="status error">Could not load this branch.</div>'}}
@@ -117,22 +117,22 @@ function renderPreview(r){
  $('snapshotImg').onerror=()=>{if(u){$('snapshotImg').src=fallbackSnapshot(r);$('snapshotLabel').textContent='Generated project snapshot'}};
  if(u){
    p.insertAdjacentHTML('beforeend','<div class="previewBar"><button class="previewBtn" type="button" id="interact">▶ Interact with demo</button></div>');
-   $('interact').onclick=()=>{p.innerHTML='<iframe src="'+esc(u)+'" title="Interactive '+esc(r.name)+' demo" loading="eager" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe>';};
+   $('interact').onclick=()=>{p.innerHTML='<iframe src="'+esc(u)+'" title="Interactive '+esc(r.name)+' demo" loading="eager" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="previewBar"><a class="previewBtn" href="'+esc(u)+'" target="_blank" rel="noopener">↗ Open in new tab</a></div>';};
    $('previewNote').textContent='Live project detected. Tap “Interact with demo” to open it inside this repository page. If the site blocks iframe embedding, use “Live demo ↗”.';
  }else $('previewNote').textContent='No live URL was detected. A responsive project snapshot is generated from the repository data.';
 }
 
 async function loadIntelligence(r){
  const safe=async(path, fallback)=>{try{return await api(path)}catch(e){return fallback}};
- const [prs,issues,contributors,activity,statuses]=await Promise.all([
+ const [prs,issues,contributors,activity,statuses,workflows]=await Promise.all([
   safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/pulls?state=open&per_page=8',[]),
   safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/issues?state=open&per_page=100',[]),
   safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/stats/contributors?per_page=10',[]),
   safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/stats/commit_activity',[]),
-  safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/commits/'+encodeURIComponent(r.default_branch)+'/status',null)
+  safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/commits/'+encodeURIComponent(r.default_branch)+'/status',null),safe('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/actions/workflows?per_page=12',null)
  ]);
  const realIssues=Array.isArray(issues)?issues.filter(x=>!x.pull_request):[];
- $('openPrs').textContent=n(Array.isArray(prs)?prs.length:0);$('openIssues').textContent=n(realIssues.length);
+ $('openPrs').textContent=n(Array.isArray(prs)?prs.length:0);$('openIssues').textContent=n(realIssues.length);$('workflowList').innerHTML=workflows&&Array.isArray(workflows.workflows)&&workflows.workflows.length?workflows.workflows.map(w=>'<a class="intelItem" href="'+esc(w.html_url||'#')+'" target="_blank" rel="noopener"><strong>'+esc(w.name)+'</strong><span>'+esc(w.state||'active')+'</span></a>').join(''):'<div class="status">No GitHub Actions workflows found.</div>';
  $('contributorList').innerHTML=Array.isArray(contributors)&&contributors.length?contributors.slice(0,8).map(c=>'<a class="intelItem" href="'+esc(c.author?.html_url||'#')+'" target="_blank" rel="noopener"><strong>'+esc(c.author?.login||'Unknown')+'</strong><span>'+n(c.total||0)+' commits</span></a>').join(''):'<div class="status">Contributor statistics are still being prepared or unavailable.</div>';
  $('prList').innerHTML=Array.isArray(prs)&&prs.length?prs.map(p=>'<a class="intelItem" href="'+esc(p.html_url)+'" target="_blank" rel="noopener"><strong>#'+esc(p.number)+' · '+esc(p.title)+'</strong><span>'+ago(p.updated_at)+'</span></a>').join(''):'<div class="status">No open pull requests.</div>';
  if(Array.isArray(activity)&&activity.length){const weeks=activity.slice(-12),max=Math.max(1,...weeks.map(x=>x.total||0));$('activityChart').innerHTML=weeks.map((w,i)=>'<i style="height:'+Math.max(6,(w.total||0)/max*92)+'%"><span>W'+(i+1)+'</span></i>').join('')}else $('activityChart').innerHTML='<div class="status">GitHub is preparing repository statistics. Try refresh shortly.</div>';
@@ -153,7 +153,7 @@ async function start(){
   repoData=r;
   $('branchLabel').textContent='Default: '+r.default_branch;
   $('cloneHttps').onclick=()=>navigator.clipboard?.writeText(r.clone_url).then(()=>{$('cloneHttps').textContent='✓ HTTPS copied';setTimeout(()=>$('cloneHttps').textContent='Copy HTTPS clone',1800)});
-  $('copyUrl').onclick=()=>navigator.clipboard?.writeText(r.html_url).then(()=>{$('copyUrl').textContent='✓ URL copied';setTimeout(()=>$('copyUrl').textContent='Copy repository URL',1800)});$('issuesLink').href=r.html_url+'/issues';$('prsLink').href=r.html_url+'/pulls';$('zipLink').href=r.html_url+'/archive/refs/heads/'+encodeURIComponent(r.default_branch)+'.zip';$('refreshBtn').onclick=()=>loadIntelligence(r);
+  $('copyUrl').onclick=()=>navigator.clipboard?.writeText(r.html_url).then(()=>{$('copyUrl').textContent='✓ URL copied';setTimeout(()=>$('copyUrl').textContent='Copy repository URL',1800)});$('issuesLink').href=r.html_url+'/issues';$('prsLink').href=r.html_url+'/pulls';$('zipLink').href=r.html_url+'/archive/refs/heads/'+encodeURIComponent(r.default_branch)+'.zip';$('refreshBtn').onclick=async()=>{ $('refreshBtn').textContent='↻ Refreshing…'; await loadIntelligence(r); $('refreshBtn').textContent='↻ Refresh data'; };
   const branches=await api('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/branches?per_page=100');$('branches').textContent=n(branches.length);$('branchSelect').innerHTML=branches.map(b=>'<option value="'+esc(b.name)+'" '+(b.name===r.default_branch?'selected':'')+'>'+esc(b.name)+'</option>').join('');$('branchSelect').onchange=e=>loadTree(e.target.value);loadTree(r.default_branch);
   $('facts').innerHTML=[
    ['Repository',r.full_name],['Type',r.fork?'Fork':'Original'],['Visibility',r.visibility||'public'],['Default branch',r.default_branch],['Created',new Date(r.created_at).toLocaleString()],['Last updated',ago(r.updated_at)],['Last push',ago(r.pushed_at)],['License',r.license?.spdx_id||'Not specified'],['Homepage',r.homepage||'Not specified'],['Git URL',r.clone_url||'—'],['Archive size',(r.size||0)+' KB'],['Subscribers',n(r.subscribers_count)],['Network count',n(r.network_count)],['Open issues',n(r.open_issues_count)],['Open PRs','Loading…']
