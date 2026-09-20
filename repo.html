@@ -252,20 +252,62 @@ async function loadFileHistory(path){
   const items=await api('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/commits?path='+encodeURIComponent(path)+'&per_page=20&sha='+encodeURIComponent(ref));
   host.innerHTML='<div class="fileHistory"><div class="historyHead"><span>FILE HISTORY · '+esc(path)+'</span><span>'+n(items.length)+' recent commits</span></div><div class="historyList">'+(items.length?items.map((x,i)=>'<div class="historyItem"><img class="historyAvatar" src="'+esc(x.author?.avatar_url||x.committer?.avatar_url||'')+'" alt=""><div><div class="historyMsg">'+esc((x.commit?.message||'Commit').split('\\n')[0])+'</div><div class="historyMeta">'+esc(x.author?.login||x.commit?.author?.name||'Unknown')+' · '+ago(x.commit?.author?.date||x.commit?.committer?.date)+'</div></div><div class="historyActions"><button class="historyAction" type="button" data-history-view="'+i+'">View</button><button class="historyAction" type="button" data-history-details="'+i+'">Details</button><button class="historyAction" type="button" data-history-diff="'+i+'">Compare</button><a class="historySha" href="'+esc(x.html_url||'#')+'" target="_blank" rel="noopener">'+esc((x.sha||'').slice(0,7))+'</a></div></div>').join(''):'<div class="status">No history found for this file.</div>')+'</div></div>';
   host.querySelectorAll('[data-history-view]').forEach(btn=>btn.onclick=()=>loadHistoricalFile(path,items[Number(btn.dataset.historyView)]));
-  host.querySelectorAll('[data-history-details]').forEach(btn=>btn.onclick=()=>loadCommitDetails(items[Number(btn.dataset.historyDetails)]));
+  host.querySelectorAll('[data-history-details]').forEach(btn=>btn.onclick=()=>loadCommitDetails(items[Number(btn.dataset.historyDetails)],path));
   host.querySelectorAll('[data-history-diff]').forEach(btn=>btn.onclick=()=>compareHistoricalFile(path,items[Number(btn.dataset.historyDiff)]));
  }catch(e){host.innerHTML='<div class="status error">File history unavailable.</div>'}
 }
-async function loadCommitDetails(commit){
- const host=$('filePreview'); if(!host||!commit?.sha)return;
+let commitFileContext=null;
+function updateCommitNav(){
+ const c=commitFileContext;if(!c)return;
+ const prev=$('commitPrev'),next=$('commitNext');
+ if(prev)prev.disabled=c.index<=0;
+ if(next)next.disabled=c.index>=c.files.length-1;
+}
+async function openCommitChangedFile(index){
+ const c=commitFileContext;if(!c||index<0||index>=c.files.length)return;
+ c.index=index;updateCommitNav();
+ const f=c.files[index],status=f.status||'modified',parent=c.commit?.parents?.[0]?.sha||'';
+ const target=status==='renamed'?(f.filename||f.previous_filename):f.filename;
+ const fileCommit=status==='deleted'?parent:c.commit;
+ if(!fileCommit?.sha)return;
+ try{
+  await loadHistoricalFile(target,fileCommit);
+  const host=$('filePreview');
+  const panel=document.createElement('div');
+  panel.className='versionCompare';
+  panel.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>'+esc(status.toUpperCase())+' · '+esc(target)+'</strong><span>'+n(c.index+1)+' / '+n(c.files.length)+'</span></div><div style="margin-top:7px;color:var(--muted);font-size:9px">'+(status==='deleted'?'Last available version before deletion.':status==='added'?'File introduced by this commit.':'Exact file version at this commit.')+'</div><div class="historyActions" style="margin-top:8px"><button class="historyAction" type="button" id="showCommitPatch">View commit patch</button>'+(parent?'<button class="historyAction" type="button" id="compareCommitParent">Compare with parent</button>':'')+'<button class="historyAction" type="button" id="backToCommit">← Back to commit</button></div><div id="commitFileDiff" style="margin-top:8px"></div>';
+  host.appendChild(panel);
+  $('showCommitPatch').onclick=()=>{$('commitFileDiff').innerHTML=renderPatch(f.patch||null)};
+  $('backToCommit').onclick=()=>loadCommitDetails(c.commit,c.returnPath);
+  if(parent)$('compareCommitParent').onclick=async()=>{
+    $('commitFileDiff').innerHTML='<div class="status">Loading comparison…</div>';
+    try{
+      const cmp=await api('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/compare/'+encodeURIComponent(parent)+'...'+encodeURIComponent(c.commit.sha));
+      const match=(cmp.files||[]).find(x=>x.filename===f.filename||x.filename===f.previous_filename);
+      $('commitFileDiff').innerHTML=match?renderPatch(match.patch):'<div class="status">No text patch is available for this file.</div>';
+    }catch(e){$('commitFileDiff').innerHTML='<div class="status error">Could not compare this file with its parent.</div>'}
+  };
+ }catch(e){
+  $('filePreview').innerHTML='<div class="status error">Historical file unavailable: '+esc(e.message||'GitHub API error')+'</div>';
+ }
+}
+async function loadCommitDetails(commit,returnPath=''){
+ const host=$('filePreview');if(!host||!commit?.sha)return;
+ commitFileContext={commit,files:[],index:0,returnPath};
  host.innerHTML='<div class="status">Loading commit intelligence…</div>';
  try{
   const d=await api('/repos/'+OWNER+'/'+encodeURIComponent(repo)+'/commits/'+encodeURIComponent(commit.sha)+'?per_page=100');
-  const v=d.commit?.verification||{}, files=Array.isArray(d.files)?d.files:[], author=d.author?.login||d.commit?.author?.name||'Unknown', message=d.commit?.message||'Commit', parent=d.parents?.[0];
+  const v=d.commit?.verification||{},files=Array.isArray(d.files)?d.files:[],author=d.author?.login||d.commit?.author?.name||'Unknown',message=d.commit?.message||'Commit',parent=d.parents?.[0];
+  commitFileContext={commit:d,files,index:0,returnPath};
   const verify=v.verified?'<span class="metaPill verifyGood">✓ Verified signature</span>':'<span class="metaPill verifyBad">Unverified · '+esc(v.reason||'unknown')+'</span>';
-  host.innerHTML='<div class="commitPanel"><div class="commitHero"><h3>'+esc(message.split('\\n')[0])+'</h3><p>'+esc(message)+'</p></div><div class="commitMeta"><span class="metaPill">'+esc(author)+'</span><span class="metaPill">'+esc(d.commit?.author?.date?new Date(d.commit.author.date).toLocaleString():'')+'</span><span class="metaPill">+'+n(d.stats?.additions||0)+'</span><span class="metaPill">−'+n(d.stats?.deletions||0)+'</span><span class="metaPill">'+n(d.stats?.total||0)+' changes</span>'+verify+(parent?'<a class="metaPill commitParent" href="'+esc(parent.html_url||'#')+'" target="_blank" rel="noopener">Parent '+esc(parent.sha.slice(0,7))+'</a>':'')+'</div><div class="commitHero" style="background:#fff"><div class="versionActions"><button class="primaryVersion" id="commitBack" type="button">← Back to file</button><a href="'+esc(d.html_url||commit.html_url||'#')+'" target="_blank" rel="noopener">Open commit ↗</a></div></div><div class="commitFiles">'+(files.length?files.map((f,i)=>'<div class="commitFile"><div class="commitFileHead"><strong>'+esc(f.status||'modified')+' · '+esc(f.filename)+'</strong><span class="commitFileStats"><span class="add">+'+n(f.additions||0)+'</span> <span class="del">−'+n(f.deletions||0)+'</span> <button class="diffToggle" type="button" data-commit-patch="'+i+'">Show patch</button></span></div><div class="commitPatch" id="commit-patch-'+i+'">'+renderPatch(f.patch||null)+'</div></div>').join(''):'<div class="status">No changed files were returned for this commit.</div>')+'</div></div>';
-  $('commitBack').onclick=()=>previewFile(activeFile?.path||'');
+  host.innerHTML='<div class="commitPanel"><div class="commitHero"><h3>'+esc(message.split('\n')[0])+'</h3><p>'+esc(message)+'</p></div><div class="commitMeta"><span class="metaPill">'+esc(author)+'</span><span class="metaPill">'+esc(d.commit?.author?.date?new Date(d.commit.author.date).toLocaleString():'')+'</span><span class="metaPill">+'+n(d.stats?.additions||0)+'</span><span class="metaPill">−'+n(d.stats?.deletions||0)+'</span><span class="metaPill">'+n(d.stats?.total||0)+' changes</span>'+verify+(parent?'<a class="metaPill commitParent" href="'+esc(parent.html_url||'#')+'" target="_blank" rel="noopener">Parent '+esc(parent.sha.slice(0,7))+'</a>':'')+'</div><div class="commitHero" style="background:#fff"><div class="versionActions"><button class="primaryVersion" id="commitBack" type="button">← Back to file</button><a href="'+esc(d.html_url||commit.html_url||'#')+'" target="_blank" rel="noopener">Open commit ↗</a></div></div><div class="commitFiles">'+(files.length?files.map((f,i)=>'<div class="commitFile"><div class="commitFileHead"><button class="diffToggle" type="button" data-commit-file="'+i+'" style="flex:1;text-align:left"><strong>'+esc(f.status||'modified')+' · '+esc(f.filename)+'</strong></button><span class="commitFileStats"><span class="add">+'+n(f.additions||0)+'</span> <span class="del">−'+n(f.deletions||0)+'</span></span></div><div class="commitPatch" id="commit-patch-'+i+'">'+renderPatch(f.patch||null)+'</div><div style="padding:8px 10px"><button class="diffToggle" type="button" data-commit-patch="'+i+'">Show patch</button></div></div>').join(''):'<div class="status">No changed files were returned for this commit.</div>')+'</div><div class="fileNav"><button type="button" id="commitPrev">← Previous file</button><button type="button" id="commitNext">Next file →</button><button type="button" id="commitBack2">Back to current file</button></div></div>';
+  $('commitBack').onclick=()=>returnPath?previewFile(returnPath):loadDeep('');
+  $('commitBack2').onclick=()=>returnPath?previewFile(returnPath):loadDeep('');
   host.querySelectorAll('[data-commit-patch]').forEach(btn=>btn.onclick=()=>{const p=$('commit-patch-'+btn.dataset.commitPatch);const open=p.classList.toggle('open');btn.textContent=open?'Hide patch':'Show patch'});
+  host.querySelectorAll('[data-commit-file]').forEach(btn=>btn.onclick=()=>openCommitChangedFile(Number(btn.dataset.commitFile)));
+  $('commitPrev').onclick=()=>openCommitChangedFile(commitFileContext.index-1);
+  $('commitNext').onclick=()=>openCommitChangedFile(commitFileContext.index+1);
+  updateCommitNav();
  }catch(e){host.innerHTML='<div class="status error">Commit details unavailable. '+esc(e.message||'GitHub API error')+'</div>'}
 }
 async function loadHistoricalFile(path,commit){
