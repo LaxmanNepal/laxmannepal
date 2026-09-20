@@ -316,7 +316,7 @@ async function showCommitSideDiff(file){
   };
   changes.forEach(el=>el.onclick=()=>{changes.forEach(x=>x.classList.remove('focused'));el.classList.add('focused');selected=Array.from(changes).indexOf(el)});
   $('reviewPrev').onclick=()=>focusChange(-1);$('reviewNext').onclick=()=>focusChange(1);
-  sideBtn.onclick=()=>{sideBtn.classList.add('active');unifiedBtn.classList.remove('active');reviewBody.innerHTML='<div class="sideDiffGrid"><div class="sidePane"><div class="sidePaneHead">Previous version</div><div class="sideScroll" data-side-scroll="old">'+parsedSideOld+'</div></div><div class="sidePane"><div class="sidePaneHead">Current version</div><div class="sideScroll" data-side-scroll="new">'+parsedSideNew+'</div></div></div>';};
+  sideBtn.onclick=()=>showCommitSideDiff(file);
   unifiedBtn.onclick=()=>{unifiedBtn.classList.add('active');sideBtn.classList.remove('active');reviewBody.innerHTML=renderPatch(file.patch||null)};
   const notes=$('reviewNotes'),noteInput=$('reviewNoteInput');let noteCount=0;
   $('reviewAddNote').onclick=()=>{const value=(noteInput.value||'').trim();if(!value)return;const focused=host.querySelector('.reviewLine.focused');const label=focused?(focused.dataset.reviewSide+' line '+focused.dataset.reviewLine):'general';noteCount++;notes.style.display='grid';notes.insertAdjacentHTML('beforeend','<div class="reviewNoteItem"><b>Local note '+noteCount+' · '+esc(label)+'</b>'+esc(value)+'</div>');noteInput.value=''};
