@@ -77,6 +77,7 @@
 </div>
 <textarea id="scriptText" aria-label="Editable video script draft" placeholder="Select an idea and press Make script, or write your own script here."></textarea>
 <div class="script-actions"><button class="primary" id="generateScript">Generate first draft</button><button class="outline" id="copyScript">Copy script</button><button class="outline" id="downloadScript">Download .txt</button><button class="outline" id="saveScript">Save draft on this device</button><button class="outline" id="loadScript">Load saved draft</button></div>
+<div class="script-actions ai-destinations" aria-label="Open AI assistant with this script prompt"><button class="outline" id="openChatGPT">Open in ChatGPT ↗</button><button class="outline" id="openGemini">Open in Gemini ↗</button></div><p class="script-help">These buttons open the selected AI website with a prompt built from your current topic and settings. If the site cannot accept the prompt through its URL, copy the prompt below and paste it into the chat.</p><div class="script-actions"><button class="outline" id="copyAIPrompt">Copy AI prompt</button></div>
 <div class="script-status" id="scriptStatus" role="status"></div>
 <p class="footnote">This creates a structured starting draft from your topic notes; it does not perform live research or verify claims. Verify product names, prices, availability and factual claims before recording. Draft saving is limited to this browser/device.</p>
 </div></section>
@@ -111,6 +112,27 @@ return lines.join("\n");
 }
 function generateDraft(){$("scriptText").value=makeDraft(selectedIdea);$("scriptStatus").textContent="Draft generated. Edit it, add source links, and verify the claims."}
 $("generateScript").addEventListener("click",generateDraft);
+
+function buildAIPrompt(){
+const x=selectedIdea, draft=$("scriptText").value;
+const title=x?x.title_direction:"[Add your video topic]";
+const channel=x?x.channel:"[Choose channel]";
+const topic=x?x.topic:"[Describe the topic and viewer problem]";
+const hook=x?x.hook_or_demo:"[Add demo idea]";
+const keywords=x?x.keywords:"[Research keywords]";
+const verification=x?x.verification_needed:"Identify claims that need verification.";
+return "Act as an expert YouTube researcher, strategist, and scriptwriter. Help me prepare a high-quality, original video script.\n\nCHANNEL: "+channel+"\nWORKING TITLE: "+title+"\nTOPIC / VIEWER PROBLEM: "+topic+"\nDEMO / HOOK IDEA: "+hook+"\nKEYWORDS TO INVESTIGATE: "+keywords+"\nLANGUAGE: "+$("scriptLanguage").value+"\nTARGET LENGTH: "+$("scriptLength").value+"\nDELIVERY STYLE: "+$("scriptStyle").value+"\n\nTASK:\n1. First research the topic using current reliable sources where browsing is available. Prioritize official documentation and primary sources; provide direct source links and dates. Never invent sources, features, prices, statistics, tests, or results. If you cannot browse, clearly say so and identify what needs checking.\n2. Propose a compelling but accurate title and opening hook.\n3. Write a complete spoken-word script suitable for the selected language and duration, with timestamps/sections, natural narration, practical steps, and clear transitions.\n4. Include a shot/screen-recording list, on-screen text, and editing notes.\n5. Add an honest conclusion and one relevant CTA.\n6. Include a fact-check table listing each time-sensitive or factual claim, its source, and verification status. Note regional limits, costs, and drawbacks where relevant.\n7. Suggest 3 title options, one thumbnail concept, a description, and useful keywords. Avoid clickbait and repetitive filler.\n\nIDEA-SPECIFIC VERIFICATION NOTE: "+verification+"\n\nCURRENT LOCAL DRAFT (use as context, improve it, and correct unsupported claims):\n"+(draft.trim()||"[No draft created yet. Build the script from the brief above.]")+"\n\nReturn the final result in clearly labelled sections. Separate verified facts from suggestions and assumptions.";
+}
+function openAIAssistant(url){
+const prompt=buildAIPrompt();
+const target=url+encodeURIComponent(prompt);
+window.open(target,"_blank","noopener,noreferrer");
+$("scriptStatus").textContent="AI site opened in a new tab. Check whether the prompt was inserted; if not, use Copy AI prompt and paste it into the chat.";
+}
+$("openChatGPT").addEventListener("click",()=>openAIAssistant("https://chatgpt.com/?q="));
+$("openGemini").addEventListener("click",()=>openAIAssistant("https://gemini.google.com/app?prompt="));
+$("copyAIPrompt").addEventListener("click",()=>{const p=buildAIPrompt();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(p).then(()=>$("scriptStatus").textContent="Full research-and-script prompt copied. Paste it into ChatGPT or Gemini.").catch(()=>$("scriptStatus").textContent="Could not access clipboard; select and copy your draft or use the AI buttons.");else $("scriptStatus").textContent="Clipboard unavailable in this browser. Try opening the AI website and copy the brief manually."});
+
 $("copyScript").addEventListener("click",()=>{const v=$("scriptText").value;if(!v.trim())return;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(()=>$("scriptStatus").textContent="Script copied.").catch(()=>$("scriptStatus").textContent="Select the text and copy it manually.");else{$("scriptText").select();$("scriptStatus").textContent="Script selected; use your device's Copy command."}});
 $("downloadScript").addEventListener("click",()=>{const blob=new Blob([$("scriptText").value],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="youtube-video-script.txt";a.click();URL.revokeObjectURL(url);$("scriptStatus").textContent="Download started."});
 $("saveScript").addEventListener("click",()=>{try{localStorage.setItem("ln-youtube-script-draft",JSON.stringify({text:$("scriptText").value,idea:selectedIdea,language:$("scriptLanguage").value,length:$("scriptLength").value,style:$("scriptStyle").value}));$("scriptStatus").textContent="Saved in this browser on this device."}catch(e){$("scriptStatus").textContent="Could not save here. Download the script instead."}});
